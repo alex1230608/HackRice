@@ -1,9 +1,12 @@
 package riceapp.hackrice.riceapp;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -17,6 +20,9 @@ import android.view.MenuItem;
 import com.alamkanak.weekview.WeekView;
 import com.alamkanak.weekview.MonthLoader;
 import com.alamkanak.weekview.WeekViewEvent;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -24,6 +30,9 @@ import java.util.List;
 
 public class MainPage extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, WeekView.EventClickListener, MonthLoader.MonthChangeListener, WeekView.EventLongPressListener, WeekView.EmptyViewLongPressListener{
+
+    private static final int RC_SIGN_IN = 9001;
+    private GoogleSignInAccount acct;
 
     private WeekView mWeekView;
 
@@ -75,6 +84,8 @@ public class MainPage extends AppCompatActivity
         mWeekView.setColumnGap((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics()));
         mWeekView.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 12, getResources().getDisplayMetrics()));
         mWeekView.setEventTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 12, getResources().getDisplayMetrics()));
+
+        startActivityForResult(new Intent(this, SignInActivity.class), RC_SIGN_IN);
     }
 
     @Override
@@ -137,7 +148,7 @@ public class MainPage extends AppCompatActivity
     @Override
     public List<? extends WeekViewEvent> onMonthChange(int newYear, int newMonth) {
         ServerRequest serverRequest = new ServerRequest(this);
-        return serverRequest.requestEvents(newYear, newMonth);
+        return serverRequest.getEventsByMonth(acct.getEmail(), newYear, newMonth);
     }
 
     @Override
@@ -154,4 +165,25 @@ public class MainPage extends AppCompatActivity
     public void onEmptyViewLongPress(Calendar time) {
 
     }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
+        if (requestCode == RC_SIGN_IN) {
+            if (resultCode == Activity.RESULT_OK)
+                handleSignInResult(data);
+            else
+                finish();
+        }
+    }
+
+    // [START handleSignInResult]
+    private void handleSignInResult(Intent data) {
+        acct = (GoogleSignInAccount) data.getParcelableExtra("account");
+        // Signed in successfully, show authenticated UI.
+        Log.d(MainPage.class.getName()+"Log", "handleSignInResult");
+    }
+    // [END handleSignInResult]
 }
