@@ -1,13 +1,22 @@
 package riceapp.hackrice.riceapp;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.RectF;
 import android.os.Bundle;
+import android.os.Message;
+import android.support.constraint.ConstraintLayout;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -17,6 +26,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+
 import com.alamkanak.weekview.WeekView;
 import com.alamkanak.weekview.MonthLoader;
 import com.alamkanak.weekview.WeekViewEvent;
@@ -31,17 +43,58 @@ import java.util.List;
 public class MainPage extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, WeekView.EventClickListener, MonthLoader.MonthChangeListener, WeekView.EventLongPressListener, WeekView.EmptyViewLongPressListener{
 
-    private static final int RC_SIGN_IN = 9001;
+    public static final int RC_SIGN_IN = 9001;
+    public static final int COURSE_INFO = 1001;
+    public static final int EDIT_TODO = 2001;
+
+    public static final int COURSE_DELETED = 1002;
+
+    public static final int LOW_PRIORITY = 3;
+    public static final int MED_PRIORITY = 2;
+    public static final int HIGH_PRIORITY = 1;
+
+    public static int EVENT_COLOR_1;
+    public static int EVENT_COLOR_2;
+    public static int EVENT_COLOR_3;
+
     private GoogleSignInAccount acct;
 
     private WeekView mWeekView;
+    CoordinatorLayout appBarMainPage;
+    View currentMainView;
+    int currentPageId;
+    int currentPriority;
+    Category currentCategory;
+    ConstraintLayout contentCalendarPage;
+    ListView listPage;
+    NavigationView navigationView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Log.d(MainPage.class.getName()+"Log", "onCreate");
+
         setContentView(R.layout.activity_main_page);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+
+        EVENT_COLOR_1 = ContextCompat.getColor(this, R.color.event_color_01);
+        EVENT_COLOR_2 = ContextCompat.getColor(this, R.color.event_color_02);
+        EVENT_COLOR_3 = ContextCompat.getColor(this, R.color.event_color_03);
+
+        LayoutInflater layoutInflater = (LayoutInflater)
+                this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        appBarMainPage = findViewById(R.id.app_bar_main_page_layout);
+        contentCalendarPage = (ConstraintLayout)layoutInflater.inflate(R.layout.content_calendar_page, appBarMainPage, false);
+        listPage = (ListView)layoutInflater.inflate(R.layout.content_list_page, appBarMainPage, false);
+        navigationView = findViewById(R.id.nav_view);
+        mWeekView = contentCalendarPage.findViewById(R.id.weekView);
+
+        currentPageId = R.id.content_calendar_page;
+        appBarMainPage.addView(contentCalendarPage);
+        currentMainView = contentCalendarPage;
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -59,27 +112,18 @@ public class MainPage extends AppCompatActivity
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
-        // Get a reference for the week view in the layout.
-        mWeekView = (WeekView) findViewById(R.id.weekView);
 
         // Show a toast message about the touched event.
         mWeekView.setOnEventClickListener(this);
-
         // The week view has infinite scrolling horizontally. We have to provide the events of a
         // month every time the month changes on the week view.
         mWeekView.setMonthChangeListener(this);
-
         // Set long press listener for events.
         mWeekView.setEventLongPressListener(this);
-
         // Set long press listener for empty view
         mWeekView.setEmptyViewLongPressListener(this);
-
         mWeekView.setNumberOfVisibleDays(3);
-
         // Lets change some dimensions to best fit the view.
         mWeekView.setColumnGap((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics()));
         mWeekView.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 12, getResources().getDisplayMetrics()));
@@ -120,25 +164,117 @@ public class MainPage extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+    public void refreshPage() {
+        appBarMainPage.removeView(currentMainView);
+        if (currentPageId == R.id.nav_calendar) {
+            appBarMainPage.addView(contentCalendarPage);
+            currentMainView = contentCalendarPage;
+        } else if (currentPageId == R.id.nav_user_course_list) {
+            ServerRequest serverRequest = new ServerRequest(this);
+            Log.d(MainPage.class.getName()+"Log", "nav_user_course_list updated");
+            List<Course> courses = serverRequest.getAllUserCourses(acct.getEmail());
+            listPage.setAdapter(new Course.CourseArrayAdapter(this, courses));
+            listPage.setOnItemClickListener(new Course.CourseItemOnClickListener(this, acct));
+            appBarMainPage.addView(listPage, 1);
+            currentMainView = listPage;
+        } else if (currentPageId == R.id.nav_all_todo_list) {
+            ServerRequest serverRequest = new ServerRequest(this);
+            Log.d(MainPage.class.getName()+"Log", "nav_all_todo_list updated");
+            List<Todo> todo = serverRequest.getAllUserTodos(acct.getEmail());
+            listPage.setAdapter(new Todo.TodoArrayAdapter(this, todo));
+            listPage.setOnItemClickListener(new Todo.TodoItemOnClickListener(this, acct));
+            appBarMainPage.addView(listPage, 1);
+            currentMainView = listPage;
+        } else if (currentPageId == R.id.nav_todo_by_priority) {
+            Log.d(MainPage.class.getName()+"Log", "nav_todo_by_priority updated");
+            AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+            alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Low", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    ServerRequest serverRequest = new ServerRequest(MainPage.this);
+                    currentPriority = LOW_PRIORITY;
+                    List<Todo> todo = serverRequest.getUserTodosByPriority(acct.getEmail(), currentPriority);
+                    listPage.setAdapter(new Todo.TodoArrayAdapter(MainPage.this, todo));
+                    listPage.setOnItemClickListener(new Todo.TodoItemOnClickListener(MainPage.this, acct));
+                    appBarMainPage.addView(listPage, 1);
+                    currentMainView = listPage;
+                }
+            });
+            alertDialog.setButton(DialogInterface.BUTTON_NEUTRAL, "Medium", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    ServerRequest serverRequest = new ServerRequest(MainPage.this);
+                    currentPriority = MED_PRIORITY;
+                    List<Todo> todo = serverRequest.getUserTodosByPriority(acct.getEmail(), currentPriority);
+                    listPage.setAdapter(new Todo.TodoArrayAdapter(MainPage.this, todo));
+                    listPage.setOnItemClickListener(new Todo.TodoItemOnClickListener(MainPage.this, acct));
+                    appBarMainPage.addView(listPage, 1);
+                    currentMainView = listPage;
+                }
+            });
+            alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "High", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    ServerRequest serverRequest = new ServerRequest(MainPage.this);
+                    currentPriority = HIGH_PRIORITY;
+                    List<Todo> todo = serverRequest.getUserTodosByPriority(acct.getEmail(), currentPriority);
+                    listPage.setAdapter(new Todo.TodoArrayAdapter(MainPage.this, todo));
+                    listPage.setOnItemClickListener(new Todo.TodoItemOnClickListener(MainPage.this, acct));
+                    appBarMainPage.addView(listPage, 1);
+                    currentMainView = listPage;
+                }
+            });
+            alertDialog.show();
+        } else if (currentPageId == R.id.nav_todo_by_category) {
+            Log.d(MainPage.class.getName()+"Log", "nav_todo_by_category updated");
+            AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+            alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Casual", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    ServerRequest serverRequest = new ServerRequest(MainPage.this);
+                    currentPriority = LOW_PRIORITY;
+                    List<Todo> todo = serverRequest.getUserTodosByCategory(acct.getEmail(), Category.CATEGORY_CASUAL);
+                    listPage.setAdapter(new Todo.TodoArrayAdapter(MainPage.this, todo));
+                    listPage.setOnItemClickListener(new Todo.TodoItemOnClickListener(MainPage.this, acct));
+                    appBarMainPage.addView(listPage, 1);
+                    currentMainView = listPage;
+                }
+            });
+            alertDialog.setButton(DialogInterface.BUTTON_NEUTRAL, "Official", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    ServerRequest serverRequest = new ServerRequest(MainPage.this);
+                    currentPriority = MED_PRIORITY;
+                    List<Todo> todo = serverRequest.getUserTodosByCategory(acct.getEmail(), Category.CATEGORY_OFFICIAL);
+                    listPage.setAdapter(new Todo.TodoArrayAdapter(MainPage.this, todo));
+                    listPage.setOnItemClickListener(new Todo.TodoItemOnClickListener(MainPage.this, acct));
+                    appBarMainPage.addView(listPage, 1);
+                    currentMainView = listPage;
+                }
+            });
+            alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "Deadline", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    ServerRequest serverRequest = new ServerRequest(MainPage.this);
+                    currentPriority = HIGH_PRIORITY;
+                    List<Todo> todo = serverRequest.getUserTodosByCategory(acct.getEmail(), Category.CATEGORY_DEADLINE);
+                    listPage.setAdapter(new Todo.TodoArrayAdapter(MainPage.this, todo));
+                    listPage.setOnItemClickListener(new Todo.TodoItemOnClickListener(MainPage.this, acct));
+                    appBarMainPage.addView(listPage, 1);
+                    currentMainView = listPage;
+                }
+            });
+            alertDialog.show();
+        }
+    }
+
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
-        }
+        currentPageId = id;
+        refreshPage();
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -176,6 +312,10 @@ public class MainPage extends AppCompatActivity
                 handleSignInResult(data);
             else
                 finish();
+        } else if (requestCode == COURSE_INFO) {
+            if (resultCode == COURSE_DELETED) {
+                refreshPage();
+            }
         }
     }
 
