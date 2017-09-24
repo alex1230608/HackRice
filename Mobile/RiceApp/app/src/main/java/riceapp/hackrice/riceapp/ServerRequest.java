@@ -95,7 +95,7 @@ public class ServerRequest {
         return events;
     }
 
-    public List<Course> getAllCourses(int term, String dept) {
+    public List<Course> getAllCourses(String email, int term, String dept) {
         return new ArrayList<Course>();
     }
 
@@ -201,5 +201,12 @@ public class ServerRequest {
                 out.add(t);
 
         return out;
+    }
+
+    public void editUserTodo(String email, Todo todo) {
+    }
+
+    public void deleteUserTodo(String email, Todo todo) {
+
     }
 }

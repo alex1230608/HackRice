@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -44,6 +45,26 @@ public class Todo implements Parcelable {
         this.date = date;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.description = description;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public void setStartTime(String startTime) {
+        this.startTime = startTime;
+    }
+
+    public void setDescription(String description) {
         this.description = description;
     }
 
@@ -96,7 +117,7 @@ public class Todo implements Parcelable {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             final Todo item = (Todo) parent.getItemAtPosition(position);
-            //context.startActivityForResult(new Intent(context, EditTodoActivity.class).putExtra("todo", item).putExtra("acct", acct), MainPage.EDIT_TODO);
+            context.startActivityForResult(new Intent(context, EditTodoActivity.class).putExtra("todo", item).putExtra("acct", acct), MainPage.EDIT_TODO);
         }
     }
 

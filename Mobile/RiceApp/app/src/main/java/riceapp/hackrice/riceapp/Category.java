@@ -42,4 +42,8 @@ public class Category {
     public int getPriority() {
         return priority;
     }
+
+    public String getName() {
+        return name;
+    }
 }

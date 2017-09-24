@@ -46,8 +46,13 @@ public class MainPage extends AppCompatActivity
     public static final int RC_SIGN_IN = 9001;
     public static final int COURSE_INFO = 1001;
     public static final int EDIT_TODO = 2001;
+    public static final int ADD_COURSE = 3001;
 
     public static final int COURSE_DELETED = 1002;
+    public static final int TODO_EDITED = 2002;
+    public static final int TODO_NO_CHANGE = 2003;
+    public static final int TODO_DELETED = 2004;
+    public static final int COURSE_ADDED = 3002;
 
     public static final int LOW_PRIORITY = 3;
     public static final int MED_PRIORITY = 2;
@@ -56,6 +61,7 @@ public class MainPage extends AppCompatActivity
     public static int EVENT_COLOR_1;
     public static int EVENT_COLOR_2;
     public static int EVENT_COLOR_3;
+
 
     private GoogleSignInAccount acct;
 
@@ -273,8 +279,14 @@ public class MainPage extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-        currentPageId = id;
-        refreshPage();
+        if (id != R.id.nav_add_course && id != R.id.nav_add_todo) {
+            currentPageId = id;
+            refreshPage();
+        } else if (id == R.id.nav_add_course) {
+            startActivityForResult(new Intent(this, AddCourseActivity.class).putExtra("acct", acct), ADD_COURSE);
+        } else if (id == R.id.nav_add_todo) {
+            startActivityForResult(new Intent(this, EditTodoActivity.class).putExtra("acct", acct), EDIT_TODO);
+        }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -314,6 +326,10 @@ public class MainPage extends AppCompatActivity
                 finish();
         } else if (requestCode == COURSE_INFO) {
             if (resultCode == COURSE_DELETED) {
+                refreshPage();
+            }
+        } else if (requestCode == EDIT_TODO) {
+            if (resultCode == TODO_EDITED || resultCode == TODO_DELETED) {
                 refreshPage();
             }
         }

@@ -33,6 +33,16 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="riceapp.hackrice.riceapp.MainPage" />
         </activity>
+        <activity
+            android:name=".EditTodoActivity"
+            android:label="@string/title_activity_edit_todo"
+            android:parentActivityName=".MainPage"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="riceapp.hackrice.riceapp.MainPage" />
+        </activity>
+        <activity android:name=".AddCourseActivity"></activity>
     </application>
 
 </manifest>
