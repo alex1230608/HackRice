@@ -16,6 +16,8 @@ public class Category {
     private int priority;
     private int color;
 
+    public Category(){}
+
     private Category(String name, String method, int priority, int color) {
         this.name = name;
         this.method = method;
@@ -45,5 +47,29 @@ public class Category {
 
     public String getName() {
         return name;
+    }
+
+    public int getColor() {
+        return color;
+    }
+
+    public void setColor(int color) {
+        this.color = color;
+    }
+
+    public String getMethod() {
+        return method;
+    }
+
+    public void setMethod(String method) {
+        this.method = method;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setPriority(int priority) {
+        this.priority = priority;
     }
 }

@@ -12,8 +12,6 @@
         android:layout_height="wrap_content"
         android:layout_x="8dp"
         android:layout_y="25dp" />
-        tools:layout_editor_absoluteX="8dp"
-        tools:layout_editor_absoluteY="25dp" />
 
     <ListView
         android:id="@+id/list_view_all_courses"

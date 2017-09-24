@@ -68,6 +68,10 @@ public class Todo implements Parcelable {
         this.description = description;
     }
 
+    public void setEndTime(String endTime) {
+        this.endTime = endTime;
+    }
+
     public static class TodoArrayAdapter extends ArrayAdapter<Todo> {
         private final AppCompatActivity context;
         private HashMap<Todo, Integer> mIdMap = new HashMap<Todo, Integer>();
@@ -117,9 +121,16 @@ public class Todo implements Parcelable {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             final Todo item = (Todo) parent.getItemAtPosition(position);
-            context.startActivityForResult(new Intent(context, EditTodoActivity.class).putExtra("todo", item).putExtra("acct", acct), MainPage.EDIT_TODO);
+            context.startActivityForResult(
+                    new Intent(context, EditTodoActivity.class)
+                            .putExtra("todo", item)
+                            .putExtra("acct", acct)
+                            .putExtra("requestCode", MainPage.EDIT_TODO),
+                    MainPage.EDIT_TODO);
         }
     }
+
+    public Todo(){}
 
     protected Todo(Parcel in) {
         name = in.readString();
@@ -165,4 +176,6 @@ public class Todo implements Parcelable {
     public Category getCategory() {
         return category;
     }
+    public String getStartTime() {return startTime; }
+    public String getEndTime() { return endTime; }
 }

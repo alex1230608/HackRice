@@ -35,7 +35,7 @@ public class CourseInfoActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 ServerRequest serverRequest = new ServerRequest(CourseInfoActivity.this);
-                serverRequest.deleteUserCourse(acct.getEmail(), course);
+                serverRequest.dropUserCourse(acct.getEmail(), course.getTermCode(), course.getCrn());
                 Snackbar.make(view, "Course deleted", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
                 setResult(MainPage.COURSE_DELETED);

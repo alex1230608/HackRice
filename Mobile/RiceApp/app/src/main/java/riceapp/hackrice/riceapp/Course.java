@@ -24,6 +24,9 @@ import java.util.List;
  */
 
 public class Course implements Parcelable {
+    private String endTime;
+    private String startTime;
+    private String meetingDays;
     private String termCode;
     private String termDescription;
     private String subject;
@@ -44,6 +47,8 @@ public class Course implements Parcelable {
     private int xlstWaitCount;
     private String catalogInstPermission;
     private String xlinkCourse;
+
+    public Course() {}
 
     public Course(
              String termCode,
@@ -114,6 +119,30 @@ public class Course implements Parcelable {
                 + "Catelog Inst Permission: " + catalogInstPermission + "\n"
                 + "Course Website Link: " + xlinkCourse;
         return out;
+    }
+
+    public String getMeetingDays() {
+        return meetingDays;
+    }
+
+    public void setMeetingDays(String meetingDays) {
+        this.meetingDays = meetingDays;
+    }
+
+    public String getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(String startTime) {
+        this.startTime = startTime;
+    }
+
+    public String getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(String endTime) {
+        this.endTime = endTime;
     }
 
     public static class CourseItemOnClickListener implements ListView.OnItemClickListener {

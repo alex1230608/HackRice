@@ -47,20 +47,25 @@ public class MainPage extends AppCompatActivity
     public static final int COURSE_INFO = 1001;
     public static final int EDIT_TODO = 2001;
     public static final int ADD_COURSE = 3001;
+    public static final int ADD_TODO = 4001;
 
     public static final int COURSE_DELETED = 1002;
     public static final int TODO_EDITED = 2002;
     public static final int TODO_NO_CHANGE = 2003;
     public static final int TODO_DELETED = 2004;
+    public static final int TODO_ADDED = 2005;
     public static final int COURSE_ADDED = 3002;
 
     public static final int LOW_PRIORITY = 3;
     public static final int MED_PRIORITY = 2;
     public static final int HIGH_PRIORITY = 1;
 
+
     public static int EVENT_COLOR_1;
     public static int EVENT_COLOR_2;
     public static int EVENT_COLOR_3;
+
+
 
 
     private GoogleSignInAccount acct;
@@ -102,15 +107,6 @@ public class MainPage extends AppCompatActivity
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -186,7 +182,7 @@ public class MainPage extends AppCompatActivity
         } else if (currentPageId == R.id.nav_all_todo_list) {
             ServerRequest serverRequest = new ServerRequest(this);
             Log.d(MainPage.class.getName()+"Log", "nav_all_todo_list updated");
-            List<Todo> todo = serverRequest.getAllUserTodos(acct.getEmail());
+            List<Todo> todo = serverRequest.getAllItems(acct.getEmail());
             listPage.setAdapter(new Todo.TodoArrayAdapter(this, todo));
             listPage.setOnItemClickListener(new Todo.TodoItemOnClickListener(this, acct));
             appBarMainPage.addView(listPage, 1);
@@ -199,7 +195,7 @@ public class MainPage extends AppCompatActivity
                 public void onClick(DialogInterface dialogInterface, int i) {
                     ServerRequest serverRequest = new ServerRequest(MainPage.this);
                     currentPriority = LOW_PRIORITY;
-                    List<Todo> todo = serverRequest.getUserTodosByPriority(acct.getEmail(), currentPriority);
+                    List<Todo> todo = serverRequest.getItemsByPriority(acct.getEmail(), currentPriority);
                     listPage.setAdapter(new Todo.TodoArrayAdapter(MainPage.this, todo));
                     listPage.setOnItemClickListener(new Todo.TodoItemOnClickListener(MainPage.this, acct));
                     appBarMainPage.addView(listPage, 1);
@@ -211,7 +207,7 @@ public class MainPage extends AppCompatActivity
                 public void onClick(DialogInterface dialogInterface, int i) {
                     ServerRequest serverRequest = new ServerRequest(MainPage.this);
                     currentPriority = MED_PRIORITY;
-                    List<Todo> todo = serverRequest.getUserTodosByPriority(acct.getEmail(), currentPriority);
+                    List<Todo> todo = serverRequest.getItemsByPriority(acct.getEmail(), currentPriority);
                     listPage.setAdapter(new Todo.TodoArrayAdapter(MainPage.this, todo));
                     listPage.setOnItemClickListener(new Todo.TodoItemOnClickListener(MainPage.this, acct));
                     appBarMainPage.addView(listPage, 1);
@@ -223,7 +219,7 @@ public class MainPage extends AppCompatActivity
                 public void onClick(DialogInterface dialogInterface, int i) {
                     ServerRequest serverRequest = new ServerRequest(MainPage.this);
                     currentPriority = HIGH_PRIORITY;
-                    List<Todo> todo = serverRequest.getUserTodosByPriority(acct.getEmail(), currentPriority);
+                    List<Todo> todo = serverRequest.getItemsByPriority(acct.getEmail(), currentPriority);
                     listPage.setAdapter(new Todo.TodoArrayAdapter(MainPage.this, todo));
                     listPage.setOnItemClickListener(new Todo.TodoItemOnClickListener(MainPage.this, acct));
                     appBarMainPage.addView(listPage, 1);
@@ -239,7 +235,7 @@ public class MainPage extends AppCompatActivity
                 public void onClick(DialogInterface dialogInterface, int i) {
                     ServerRequest serverRequest = new ServerRequest(MainPage.this);
                     currentPriority = LOW_PRIORITY;
-                    List<Todo> todo = serverRequest.getUserTodosByCategory(acct.getEmail(), Category.CATEGORY_CASUAL);
+                    List<Todo> todo = serverRequest.getItemsByCat(acct.getEmail(), Category.CATEGORY_CASUAL.getName());
                     listPage.setAdapter(new Todo.TodoArrayAdapter(MainPage.this, todo));
                     listPage.setOnItemClickListener(new Todo.TodoItemOnClickListener(MainPage.this, acct));
                     appBarMainPage.addView(listPage, 1);
@@ -251,7 +247,7 @@ public class MainPage extends AppCompatActivity
                 public void onClick(DialogInterface dialogInterface, int i) {
                     ServerRequest serverRequest = new ServerRequest(MainPage.this);
                     currentPriority = MED_PRIORITY;
-                    List<Todo> todo = serverRequest.getUserTodosByCategory(acct.getEmail(), Category.CATEGORY_OFFICIAL);
+                    List<Todo> todo = serverRequest.getItemsByCat(acct.getEmail(), Category.CATEGORY_OFFICIAL.getName());
                     listPage.setAdapter(new Todo.TodoArrayAdapter(MainPage.this, todo));
                     listPage.setOnItemClickListener(new Todo.TodoItemOnClickListener(MainPage.this, acct));
                     appBarMainPage.addView(listPage, 1);
@@ -263,7 +259,7 @@ public class MainPage extends AppCompatActivity
                 public void onClick(DialogInterface dialogInterface, int i) {
                     ServerRequest serverRequest = new ServerRequest(MainPage.this);
                     currentPriority = HIGH_PRIORITY;
-                    List<Todo> todo = serverRequest.getUserTodosByCategory(acct.getEmail(), Category.CATEGORY_DEADLINE);
+                    List<Todo> todo = serverRequest.getItemsByCat(acct.getEmail(), Category.CATEGORY_DEADLINE.getName());
                     listPage.setAdapter(new Todo.TodoArrayAdapter(MainPage.this, todo));
                     listPage.setOnItemClickListener(new Todo.TodoItemOnClickListener(MainPage.this, acct));
                     appBarMainPage.addView(listPage, 1);
@@ -285,7 +281,7 @@ public class MainPage extends AppCompatActivity
         } else if (id == R.id.nav_add_course) {
             startActivityForResult(new Intent(this, AddCourseActivity.class).putExtra("acct", acct), ADD_COURSE);
         } else if (id == R.id.nav_add_todo) {
-            startActivityForResult(new Intent(this, EditTodoActivity.class).putExtra("acct", acct), EDIT_TODO);
+            startActivityForResult(new Intent(this, EditTodoActivity.class).putExtra("acct", acct).putExtra("requestCode", ADD_TODO), ADD_TODO);
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -296,7 +292,7 @@ public class MainPage extends AppCompatActivity
     @Override
     public List<? extends WeekViewEvent> onMonthChange(int newYear, int newMonth) {
         ServerRequest serverRequest = new ServerRequest(this);
-        return serverRequest.getEventsByMonth(acct.getEmail(), newYear, newMonth);
+        return serverRequest.getEventsByTime(acct.getEmail(), ""+newYear, ""+newMonth);
     }
 
     @Override
@@ -328,10 +324,13 @@ public class MainPage extends AppCompatActivity
             if (resultCode == COURSE_DELETED) {
                 refreshPage();
             }
-        } else if (requestCode == EDIT_TODO) {
-            if (resultCode == TODO_EDITED || resultCode == TODO_DELETED) {
+        } else if (requestCode == EDIT_TODO || requestCode == ADD_TODO) {
+            if (resultCode == TODO_EDITED || resultCode == TODO_DELETED || resultCode == TODO_ADDED) {
                 refreshPage();
             }
+        } else if (requestCode == ADD_COURSE) {
+
+
         }
     }
 

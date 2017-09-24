@@ -39,15 +39,16 @@ public class AddCourseActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 ServerRequest serverRequest = new ServerRequest(AddCourseActivity.this);
-                List<Course> courses = serverRequest.getAllCourses(acct.getEmail(), 201710, subjStrs[i]);
+                List<Course> courses = serverRequest.getAllCourses("201710", subjStrs[i]);
                 listView.setAdapter(new Course.CourseArrayAdapter(AddCourseActivity.this, courses));
                 listView.setOnItemClickListener(new ListView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+
                         final Course item = (Course) adapterView.getItemAtPosition(i);
-                        Intent returnIntent = new Intent();
-                        returnIntent.putExtra("course",item);
-                        setResult(MainPage.COURSE_ADDED,returnIntent);
+                        ServerRequest serverRequest = new ServerRequest(AddCourseActivity.this);
+                        serverRequest.addUserCourse(acct.getEmail(), item.getTermCode(), item.getCrn());
+                        setResult(MainPage.COURSE_ADDED);
                         finish();
                     }
                 });

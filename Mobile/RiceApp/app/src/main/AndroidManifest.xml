@@ -43,6 +43,9 @@
                 android:value="riceapp.hackrice.riceapp.MainPage" />
         </activity>
         <activity android:name=".AddCourseActivity"></activity>
+
     </application>
+    <uses-permission android:name="android.permission.INTERNET"></uses-permission>
+
 
 </manifest>

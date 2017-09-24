@@ -34,6 +34,7 @@ public class EditTodoActivity extends AppCompatActivity {
     private EditText todoTimeText;
     private FloatingActionButton calendarButton;
     private FloatingActionButton timeButton;
+    private int requestCode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +43,10 @@ public class EditTodoActivity extends AppCompatActivity {
 
         todo = (Todo) getIntent().getParcelableExtra("todo");
         acct = (GoogleSignInAccount) getIntent().getParcelableExtra("acct");
+        requestCode = getIntent().getIntExtra("requestCode", -1);
 
+        todoNameText = findViewById(R.id.todo_name_text);
+        todoDescriptionText = findViewById(R.id.todo_descriptioin_text);
         todoDateText = findViewById(R.id.todo_date_text);
         todoTimeText = findViewById(R.id.todo_time_text);
 
@@ -64,8 +68,13 @@ public class EditTodoActivity extends AppCompatActivity {
             public void onClick(View view) {
                 updateTodoFromUI();
                 ServerRequest serverRequest = new ServerRequest(EditTodoActivity.this);
-                serverRequest.editUserTodo(acct.getEmail(), todo);
-                setResult(MainPage.TODO_EDITED);
+                if (requestCode == MainPage.ADD_TODO) {
+                    serverRequest.addUserItem(acct.getEmail(), todo);
+                    setResult(MainPage.TODO_ADDED);
+                } else if (requestCode == MainPage.EDIT_TODO) {
+                    serverRequest.editUserItem(acct.getEmail(), todo.getName(), todo);
+                    setResult(MainPage.TODO_EDITED);
+                }
                 finish();
             }
         });
@@ -82,7 +91,7 @@ public class EditTodoActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 ServerRequest serverRequest = new ServerRequest(EditTodoActivity.this);
-                serverRequest.deleteUserTodo(acct.getEmail(), todo);
+                serverRequest.deleteUserItem(acct.getEmail(), todo.getName());
                 setResult(MainPage.TODO_DELETED);
                 finish();
             }
@@ -135,6 +144,14 @@ public class EditTodoActivity extends AppCompatActivity {
 
         if (todo != null) {
             updateUIFromTodo();
+        } else {
+            todo = new Todo();
+        }
+        fab = (FloatingActionButton) findViewById(R.id.fab_delete);
+        if (requestCode == MainPage.ADD_TODO) {
+            fab.setVisibility(View.GONE);
+        } else {
+            fab.setVisibility(View.VISIBLE);
         }
     }
 

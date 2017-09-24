@@ -1,12 +1,14 @@
 package riceapp.hackrice.riceapp;
 
-import android.content.Context;
-import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.util.Log;
+import android.widget.TextView;
 
-import com.alamkanak.weekview.WeekViewEvent;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -21,48 +23,70 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+public class MainActivity extends AppCompatActivity {/*
+    TextView mTextView;
+    TextView parsed;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
+    String common;
+    Course c = new Course();
 
-/**
- * Created by Admin on 2017/9/23.
- */
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        mTextView = (TextView) findViewById(R.id.TextView);
+        parsed = (TextView) findViewById(R.id.parsed);
+        common = "http://10.112.78.228:8080/RiceApp/";
 
-public class ServerRequest {
-
-    public Context context;
-
-    String common = "http://10.112.78.228:8080/RiceApp/";
-
-    public ServerRequest(Context context) {
-        this.context = context;
+//        getAllCourses("201810", "COMP");
+//        getAllUserCourses("email");
+//        enroll("email");
+//        addUserCourse("email", "201810", 10020);
+//        dropUserCourse("email", "201810", 10020);
+//        getAllItems("mack@gmail.com");
+//        getItemsByPriority("mack@gmail.com", "normal");
+//        getItemsByCat("mack@gmail.com", "category");
+        TodoCategory cat = new TodoCategory();
+        cat.setCategory("amusement");
+        cat.setColor("cvan");
+        cat.setPriority("normal");
+        cat.setNotifyMethod("none");
+        TodoItem item = new TodoItem();
+        item.setName("itemName");
+        item.setTodoCategory(cat);
+        item.setDate("2017-01-01");
+        item.setBeginTime("1220");
+        item.setEndTime("1420");
+//        addUserItem("mack@gmail.com", item);
+//        deleteUserItem("mack@gmail.com", "itemName");
+        getItemsByTime("mack@gmail.com", "2017", "9");
+//        getcoursesByTime("mack@gmail.com", "2017", "10");
     }
 
-    public void enroll(final String email) {
+
+    private void enroll(final String email) {
         // TODO: create new url
         String url = common + "enroll";
 
-        finished = false;
-
-        RequestQueue queue = Volley.newRequestQueue(context);
+        RequestQueue queue = Volley.newRequestQueue(this);
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-
+                        //mTextView.setText("Response is: "+ response);
                         try {
                             JSONObject jsonObj = new JSONObject(response);
                             String code = jsonObj.getString("code");
                             String msg = jsonObj.getString("msg");
+                            parsed.setText("Parsed: code: " + code + "; msg: " + msg);
                         } catch (final JSONException e) {
+                            mTextView.setText("Json parsing error: " + e.getMessage());
                         }
-                        finished = true;
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-
+                mTextView.setText("That didn't work!");
             }
         }) {
             protected Map<String, String> getParams() throws com.android.volley.AuthFailureError {
@@ -73,31 +97,30 @@ public class ServerRequest {
         };
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
-        while(!finished);
         return;
     }
 
 
-    Course c = new Course();
 
-    public List<Course> getAllCourses(final String termCode, final String subject) {
+
+    private void getAllCourses(final String termCode, final String subject) {
         String url = common + "courses/" + termCode + "/" + subject;
-        RequestQueue queue = Volley.newRequestQueue(context);
-
-        finished = false;
+        RequestQueue queue = Volley.newRequestQueue(this);
 
         // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-
+                        //mTextView.setText("Response is: "+ response);
                         try {
-                            courses = new LinkedList<Course>();
+                            List<Course> courses = new LinkedList<Course>();
                             JSONObject jsonObj = new JSONObject(response);
                             String code = jsonObj.getString("code");
                             String msg = jsonObj.getString("msg");
+                            parsed.setText("Parsed: code: " + code + "; msg: " + msg);
                             JSONArray dataArray = jsonObj.getJSONArray("data");
+                            mTextView.setText("Length of dataArray is " + dataArray.length());
                             for (int i = 0; i < dataArray.length(); i++) {
                                 JSONObject jo = dataArray.getJSONObject(i);
                                 c.setTermCode(jo.getString("termCode"));
@@ -115,16 +138,17 @@ public class ServerRequest {
                                 c.setInstructor(jo.getString("instructor"));
                                 courses.add(c);
                             }
+                            parsed.setText("Number of courses in get:" + courses.size());
                             // TODO: display courses
 
-
                         } catch (final JSONException e) {
+                            mTextView.setText("Json parsing error: " + e.getMessage());
                         }
-                        finished = true;
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                mTextView.setText("That didn't work!");
             }
         }) {
             protected Map<String, String> getParams() throws com.android.volley.AuthFailureError {
@@ -136,30 +160,27 @@ public class ServerRequest {
         };
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
-        while (!finished);
-
-        return courses;
+        return;
     }
-    List<Course> courses;
-    boolean finished;
 
-    public List<Course> getAllUserCourses(final String email) {
+    private void getAllUserCourses(final String email) {
         String url = common + "courses";
-        RequestQueue queue = Volley.newRequestQueue(context);
-        finished = false;
+        RequestQueue queue = Volley.newRequestQueue(this);
 
         // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-
+                        //mTextView.setText("Response is: "+ response);
                         try {
-                             courses = new LinkedList<Course>();
+                            List<Course> courses = new LinkedList<Course>();
                             JSONObject jsonObj = new JSONObject(response);
                             String code = jsonObj.getString("code");
                             String msg = jsonObj.getString("msg");
+                            parsed.setText("Parsed: code: " + code + "; msg: " + msg);
                             JSONArray dataArray = jsonObj.getJSONArray("data");
+                            mTextView.setText("Length of dataArray is " + dataArray.length());
                             for (int i = 0; i < dataArray.length(); i++) {
                                 JSONObject jo = dataArray.getJSONObject(i);
                                 c.setTermCode(jo.getString("termCode"));
@@ -177,16 +198,17 @@ public class ServerRequest {
                                 c.setInstructor(jo.getString("instructor"));
                                 courses.add(c);
                             }
+                            parsed.setText("Number of courses in get:" + courses.size());
                             // TODO: display courses
 
-
                         } catch (final JSONException e) {
+                            mTextView.setText("Json parsing error: " + e.getMessage());
                         }
-                        finished = true;
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                mTextView.setText("That didn't work!");
             }
         }) {
             protected Map<String, String> getParams() throws com.android.volley.AuthFailureError {
@@ -197,34 +219,32 @@ public class ServerRequest {
         };
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
-        while (!finished) ;
-
-        return courses;
+        return;
     }
 
-    public void dropUserCourse(final String email, final String termCode, final int crn) {
+    private void dropUserCourse(final String email, final String termCode, final int crn) {
         // TODO: create new url
         String url = common + "drop/" + termCode + "/" + crn;
-        finished = false;
 
-        RequestQueue queue = Volley.newRequestQueue(context);
+        RequestQueue queue = Volley.newRequestQueue(this);
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-
+                        //mTextView.setText("Response is: "+ response);
                         try {
                             JSONObject jsonObj = new JSONObject(response);
                             String code = jsonObj.getString("code");
                             String msg = jsonObj.getString("msg");
+                            parsed.setText("Parsed: code: " + code + "; msg: " + msg);
                         } catch (final JSONException e) {
+                            mTextView.setText("Json parsing error: " + e.getMessage());
                         }
-                        finished = true;
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                
+                mTextView.setText("That didn't work!");
             }
         }) {
             protected Map<String, String> getParams() throws com.android.volley.AuthFailureError {
@@ -237,36 +257,33 @@ public class ServerRequest {
         };
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
-        while(!finished);
         return;
     }
 
 
-    public void addUserCourse(final String email, final String termCode, final int crn) {
+    private void addUserCourse(final String email, final String termCode, final int crn) {
         // TODO: create new url
         String url = common + "enroll/" + termCode + "/" + crn;
 
-        finished = false;
-
-        RequestQueue queue = Volley.newRequestQueue(context);
+        RequestQueue queue = Volley.newRequestQueue(this);
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-
+                        //mTextView.setText("Response is: "+ response);
                         try {
                             JSONObject jsonObj = new JSONObject(response);
                             String code = jsonObj.getString("code");
                             String msg = jsonObj.getString("msg");
+                            parsed.setText("Parsed: code: " + code + "; msg: " + msg);
                         } catch (final JSONException e) {
+                            mTextView.setText("Json parsing error: " + e.getMessage());
                         }
-
-                        finished = true;
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-
+                mTextView.setText("That didn't work!");
             }
         }) {
             protected Map<String, String> getParams() throws com.android.volley.AuthFailureError {
@@ -279,65 +296,60 @@ public class ServerRequest {
         };
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
-        while(!finished) ;
         return;
     }
-    List<Todo> items;
 
-    public List<Todo> getAllItems(final String email) {
+
+    private void getAllItems(final String email) {
         String url = common + "todoitems";
-        RequestQueue queue = Volley.newRequestQueue(context);
-
-        finished = false;
+        RequestQueue queue = Volley.newRequestQueue(this);
 
         // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-
+                        //mTextView.setText("Response is: "+ response);
                         try {
-                            items = new LinkedList<Todo>();
+                            final List<TodoItem> items = new LinkedList<TodoItem>();
                             JSONObject jsonObj = new JSONObject(response);
                             String code = jsonObj.getString("code");
                             String msg = jsonObj.getString("msg");
-
+                            parsed.setText("Parsed: code: " + code + "; msg: " + msg);
 
                             JSONArray dataArray = jsonObj.getJSONArray("data");
 
-
+                            mTextView.setText("Length of dataArray is " + dataArray.length());
 
                             for (int i = 0; i < dataArray.length(); i++) {
                                 JSONObject jo = dataArray.getJSONObject(i);
-                                Todo item = new Todo();
+                                TodoItem item = new TodoItem();
                                 item.setName(jo.getString("name"));
                                 item.setEndTime(jo.getString("endTime"));
-                                item.setStartTime(jo.getString("beginTime"));
+                                item.setBeginTime(jo.getString("beginTime"));
                                 item.setDate(jo.getString("date"));
 
-                                Category cat = new Category();
+                                TodoCategory cat = new TodoCategory();
                                 JSONObject co = jo.getJSONObject("todoCategory");
-                                cat.setName(co.getString("category"));
-                                cat.setColor(Integer.parseInt(co.getString("color")));
-                                cat.setMethod(co.getString("notifyMethod"));
-                                cat.setPriority(Integer.parseInt(co.getString("priority")));
+                                cat.setCategory(co.getString("category"));
+                                cat.setColor(co.getString("color"));
+                                cat.setNotifyMethod(co.getString("notifyMethod"));
+                                cat.setPriority(co.getString("priority"));
 
-                                item.setCategory(cat);
+                                item.setTodoCategory(cat);
                                 items.add(item);
                             }
-
+                            parsed.setText("Number of courses in get:" + items.size());
                             // TODO: display items
 
-
                         } catch (final JSONException e) {
-
+                            mTextView.setText("Json parsing error: " + e.getMessage());
                         }
-                        finished = true;
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-
+                mTextView.setText("That didn't work!");
             }
         }) {
             protected Map<String, String> getParams() throws com.android.volley.AuthFailureError {
@@ -348,133 +360,123 @@ public class ServerRequest {
         };
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
-        while(!finished) ;
-        return items;
+        return;
     }
 
-    public List<Todo> getItemsByPriority(final String email, final int priority) {
+    private void getItemsByPriority(final String email, final String priority) {
         String url = common + "todoitems/priority";
-        RequestQueue queue = Volley.newRequestQueue(context);
-
-        finished = false;
+        RequestQueue queue = Volley.newRequestQueue(this);
 
         // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-
+                        //mTextView.setText("Response is: "+ response);
                         try {
-                            items = new LinkedList<Todo>();
+                            final List<TodoItem> items = new LinkedList<TodoItem>();
                             JSONObject jsonObj = new JSONObject(response);
                             String code = jsonObj.getString("code");
                             String msg = jsonObj.getString("msg");
-
+                            parsed.setText("Parsed: code: " + code + "; msg: " + msg);
 
                             JSONArray dataArray = jsonObj.getJSONArray("data");
 
-
+                            mTextView.setText("Length of dataArray is " + dataArray.length());
 
                             for (int i = 0; i < dataArray.length(); i++) {
                                 JSONObject jo = dataArray.getJSONObject(i);
-                                Todo item = new Todo();
+                                TodoItem item = new TodoItem();
                                 item.setName(jo.getString("name"));
                                 item.setEndTime(jo.getString("endTime"));
-                                item.setStartTime(jo.getString("beginTime"));
+                                item.setBeginTime(jo.getString("beginTime"));
                                 item.setDate(jo.getString("date"));
 
-                                Category cat = new Category();
+                                TodoCategory cat = new TodoCategory();
                                 JSONObject co = jo.getJSONObject("todoCategory");
-                                cat.setName(co.getString("category"));
-                                cat.setColor(Integer.parseInt(co.getString("color")));
-                                cat.setMethod(co.getString("notifyMethod"));
-                                cat.setPriority(Integer.parseInt(co.getString("priority")));
+                                cat.setCategory(co.getString("category"));
+                                cat.setColor(co.getString("color"));
+                                cat.setNotifyMethod(co.getString("notifyMethod"));
+                                cat.setPriority(co.getString("priority"));
 
-                                item.setCategory(cat);
+                                item.setTodoCategory(cat);
                                 items.add(item);
                             }
-
+                            parsed.setText("Number of courses in get:" + items.size());
                             // TODO: display items
 
                         } catch (final JSONException e) {
-
+                            mTextView.setText("Json parsing error: " + e.getMessage());
                         }
-                        finished = true;
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-
+                mTextView.setText("That didn't work!");
             }
         }) {
             protected Map<String, String> getParams() throws com.android.volley.AuthFailureError {
                 Map<String, String> params = new HashMap<String, String>();
                 params.put("email", email);
-                params.put("priority", ""+priority);
+                params.put("priority", priority);
                 return params;
             }
         };
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
-
-        while(!finished) ;
-        return items;
+        return;
     }
 
-    public List<Todo> getItemsByCat(final String email, final String category) {
+    private void getItemsByCat(final String email, final String category) {
         String url = common + "todoitems/category";
-        RequestQueue queue = Volley.newRequestQueue(context);
-
-        finished = false;
+        RequestQueue queue = Volley.newRequestQueue(this);
 
         // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-
+                        //mTextView.setText("Response is: "+ response);
                         try {
-                            items = new LinkedList<Todo>();
+                            final List<TodoItem> items = new LinkedList<TodoItem>();
                             JSONObject jsonObj = new JSONObject(response);
                             String code = jsonObj.getString("code");
                             String msg = jsonObj.getString("msg");
-
+                            parsed.setText("Parsed: code: " + code + "; msg: " + msg);
 
                             JSONArray dataArray = jsonObj.getJSONArray("data");
 
-
+                            mTextView.setText("Length of dataArray is " + dataArray.length());
 
                             for (int i = 0; i < dataArray.length(); i++) {
                                 JSONObject jo = dataArray.getJSONObject(i);
-                                Todo item = new Todo();
+                                TodoItem item = new TodoItem();
                                 item.setName(jo.getString("name"));
                                 item.setEndTime(jo.getString("endTime"));
-                                item.setStartTime(jo.getString("beginTime"));
+                                item.setBeginTime(jo.getString("beginTime"));
                                 item.setDate(jo.getString("date"));
 
-                                Category cat = new Category();
+                                TodoCategory cat = new TodoCategory();
                                 JSONObject co = jo.getJSONObject("todoCategory");
-                                cat.setName(co.getString("category"));
-                                cat.setColor(Integer.parseInt(co.getString("color")));
-                                cat.setMethod(co.getString("notifyMethod"));
-                                cat.setPriority(Integer.parseInt(co.getString("priority")));
+                                cat.setCategory(co.getString("category"));
+                                cat.setColor(co.getString("color"));
+                                cat.setNotifyMethod(co.getString("notifyMethod"));
+                                cat.setPriority(co.getString("priority"));
 
-                                item.setCategory(cat);
+                                item.setTodoCategory(cat);
                                 items.add(item);
                             }
-
+                            parsed.setText("Number of courses in get:" + items.size());
                             // TODO: display items
 
-
                         } catch (final JSONException e) {
-
+                            mTextView.setText("Json parsing error: " + e.getMessage());
                         }
-                        finished = true;
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-
+                mTextView.setText("That didn't work!");
             }
         }) {
             protected Map<String, String> getParams() throws com.android.volley.AuthFailureError {
@@ -486,34 +488,32 @@ public class ServerRequest {
         };
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
-        while (!finished) ;
-        return items;
+        return;
     }
 
-    public void editUserItem(final String email, final String itemName, final Todo wholeItem) {
+    private void editUserItem(final String email, final String itemName, final TodoItem wholeItem) {
         // TODO: create new url
         String url = common + "todoitem/update";
-        finished = false;
 
-        RequestQueue queue = Volley.newRequestQueue(context);
+        RequestQueue queue = Volley.newRequestQueue(this);
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-
+                        //mTextView.setText("Response is: "+ response);
                         try {
                             JSONObject jsonObj = new JSONObject(response);
                             String code = jsonObj.getString("code");
                             String msg = jsonObj.getString("msg");
+                            parsed.setText("Parsed: code: " + code + "; msg: " + msg);
                         } catch (final JSONException e) {
-
+                            mTextView.setText("Json parsing error: " + e.getMessage());
                         }
-                        finished = true;
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-
+                mTextView.setText("That didn't work!");
             }
         }) {
             protected Map<String, String> getParams() throws com.android.volley.AuthFailureError {
@@ -521,46 +521,45 @@ public class ServerRequest {
                 params.put("email", email);
                 params.put("itemName", itemName);
                 params.put("name", wholeItem.getName());
-                Category cat = wholeItem.getCategory();
-                params.put("category", cat.getName());
-                params.put("color", ""+cat.getColor());
-                params.put("priority", ""+cat.getPriority());
-                params.put("notifyMethod", cat.getMethod());
+                TodoCategory cat = wholeItem.getTodoCategory();
+                params.put("category", cat.getCategory());
+                params.put("color", cat.getColor());
+                params.put("priority", cat.getPriority());
+                params.put("notifyMethod", cat.getNotifyMethod());
                 params.put("date", wholeItem.getDate());
-                params.put("beginTime", wholeItem.getStartTime());
+                params.put("beginTime", wholeItem.getBeginTime());
                 params.put("endTime", wholeItem.getEndTime());
                 return params;
             }
         };
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
-        while(!finished);
         return;
     }
 
-    public void deleteUserItem(final String email, final String itemName) {
+    private void deleteUserItem(final String email, final String itemName) {
         // TODO: create new url
         String url = common + "todoitem/" + itemName + "/delete";
 
-        RequestQueue queue = Volley.newRequestQueue(context);
+        RequestQueue queue = Volley.newRequestQueue(this);
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-
+                        //mTextView.setText("Response is: "+ response);
                         try {
                             JSONObject jsonObj = new JSONObject(response);
                             String code = jsonObj.getString("code");
                             String msg = jsonObj.getString("msg");
-
+                            parsed.setText("Parsed: code: " + code + "; msg: " + msg);
                         } catch (final JSONException e) {
-
+                            mTextView.setText("Json parsing error: " + e.getMessage());
                         }
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-
+                mTextView.setText("That didn't work!");
             }
         }) {
             protected Map<String, String> getParams() throws com.android.volley.AuthFailureError {
@@ -575,87 +574,77 @@ public class ServerRequest {
         return;
     }
 
-    public void addUserItem(final String email, final Todo wholeItem) {
+    private void addUserItem(final String email, final TodoItem wholeItem) {
         // TODO: create new url
         String url = common + "todoitem";
 
-        finished = false;
-
-        RequestQueue queue = Volley.newRequestQueue(context);
+        RequestQueue queue = Volley.newRequestQueue(this);
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-
+                        //mTextView.setText("Response is: "+ response);
                         try {
                             JSONObject jsonObj = new JSONObject(response);
                             String code = jsonObj.getString("code");
                             String msg = jsonObj.getString("msg");
-
+                            parsed.setText("Parsed: code: " + code + "; msg: " + msg);
                         } catch (final JSONException e) {
-
+                            mTextView.setText("Json parsing error: " + e.getMessage());
                         }
-                        finished = true;
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-
+                mTextView.setText("That didn't work!");
             }
         }) {
             protected Map<String, String> getParams() throws com.android.volley.AuthFailureError {
                 Map<String, String> params = new HashMap<String, String>();
                 params.put("email", email);
                 params.put("name", wholeItem.getName());
-                Category cat = wholeItem.getCategory();
-                params.put("category", cat.getName());
-                params.put("color", ""+cat.getColor());
-                params.put("priority", ""+cat.getPriority());
-                params.put("notifyMethod", cat.getMethod());
+                TodoCategory cat = wholeItem.getTodoCategory();
+                params.put("category", cat.getCategory());
+                params.put("color", cat.getColor());
+                params.put("priority", cat.getPriority());
+                params.put("notifyMethod", cat.getNotifyMethod());
                 params.put("date", wholeItem.getDate());
-                params.put("beginTime", wholeItem.getStartTime());
+                params.put("beginTime", wholeItem.getBeginTime());
                 params.put("endTime", wholeItem.getEndTime());
                 return params;
             }
         };
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
-        while (!finished) ;
         return;
     }
 
-    public  List<WeekViewEvent> getEventsByTime(final String email, final String year, final String month) {
-        List<WeekViewEvent> events = new ArrayList<WeekViewEvent>();
-        events.addAll(getItemsByTime(email, year, month));
-        events.addAll(getcoursesByTime(email, year, month));
-        return events;
+    private  void getEventsByTime(final String email, final String year, final String month) {
+        getItemsByTime(email, year, month);
+        getcoursesByTime(email, year, month);
+        return;
     }
 
-    List<WeekViewEvent> weekViewEvents;
-    public static int countWeekEvent = 1;
-
-    public List<WeekViewEvent> getItemsByTime(final String email, final String year, final String month) {
+    private void getItemsByTime(final String email, final String year, final String month) {
         String url = common + "todoitems/search";
-        RequestQueue queue = Volley.newRequestQueue(context);
-
-        finished = false;
+        RequestQueue queue = Volley.newRequestQueue(this);
 
         // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-
+                        //mTextView.setText("Response is: "+ response);
                         try {
-                            weekViewEvents = new LinkedList<WeekViewEvent>();
+                            final List<Event> events = new LinkedList<Event>();
                             JSONObject jsonObj = new JSONObject(response);
                             String code = jsonObj.getString("code");
                             String msg = jsonObj.getString("msg");
-
+                            parsed.setText("Parsed: code: " + code + "; msg: " + msg);
 
                             JSONArray dataArray = jsonObj.getJSONArray("data");
 
-
+                            mTextView.setText("Length of dataArray is " + dataArray.length());
                             final int[] months = new int[]{Calendar.JANUARY, Calendar.FEBRUARY, Calendar.MARCH,
                                     Calendar.APRIL, Calendar.MAY, Calendar.JUNE, Calendar.JULY, Calendar.AUGUST, Calendar.SEPTEMBER,
                                     Calendar.OCTOBER, Calendar.NOVEMBER, Calendar.DECEMBER};
@@ -669,22 +658,20 @@ public class ServerRequest {
                                 Calendar cldEnd = Calendar.getInstance();
                                 cldStart.set(Integer.parseInt(year), months[Integer.parseInt(month)], Integer.parseInt(jo.getString("date").substring(8)),
                                         Integer.parseInt(endTime.substring(0, 2)), Integer.parseInt(endTime.substring(3)));
-                                WeekViewEvent event = new WeekViewEvent(countWeekEvent++, jo.getString("name"), cldStart, cldEnd);
-                                weekViewEvents.add(event);
+                                Event event = new Event(jo.getString("name"), cldStart, cldEnd);
+                                events.add(event);
                             }
-
+                            parsed.setText("Number of courses in get:" + events.size());
                             // TODO: display events
 
-
                         } catch (final JSONException e) {
-
+                            mTextView.setText("Json parsing error: " + e.getMessage());
                         }
-                        finished = true;
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-
+                mTextView.setText("That didn't work!");
             }
         }) {
             protected Map<String, String> getParams() throws com.android.volley.AuthFailureError {
@@ -697,35 +684,33 @@ public class ServerRequest {
         };
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
-        while(!finished) ;
-        return weekViewEvents;
+        return;
     }
 
 
-    public List<WeekViewEvent> getcoursesByTime(final String email, final String year, final String month) {
+    private void getcoursesByTime(final String email, final String year, final String month) {
         String url = common + "getEventsWithinMonth";
-        RequestQueue queue = Volley.newRequestQueue(context);
+        RequestQueue queue = Volley.newRequestQueue(this);
 
-        finished = false;
         // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-
+                        //mTextView.setText("Response is: "+ response);
                         try {
-                            final List<WeekViewEvent> events = new LinkedList<WeekViewEvent>();
+                            final List<Event> events = new LinkedList<Event>();
                             JSONObject jsonObj = new JSONObject(response);
                             String code = jsonObj.getString("code");
                             String msg = jsonObj.getString("msg");
-
+                            parsed.setText("Parsed: code: " + code + "; msg: " + msg);
 
                             JSONArray dataArray = jsonObj.getJSONArray("data");
 
-
+                            mTextView.setText("Length of dataArray is " + dataArray.length());
                             final int[] months = new int[]{Calendar.JANUARY, Calendar.FEBRUARY, Calendar.MARCH,
-                                    Calendar.APRIL, Calendar.MAY, Calendar.JUNE, Calendar.JULY, Calendar.AUGUST, Calendar.SEPTEMBER,
-                                    Calendar.OCTOBER, Calendar.NOVEMBER, Calendar.DECEMBER};
+                            Calendar.APRIL, Calendar.MAY, Calendar.JUNE, Calendar.JULY, Calendar.AUGUST, Calendar.SEPTEMBER,
+                            Calendar.OCTOBER, Calendar.NOVEMBER, Calendar.DECEMBER};
                             for (int i = 0; i < dataArray.length(); i++) {
                                 JSONObject jo = dataArray.getJSONObject(i);
                                 String startTime = jo.getString("startTime");
@@ -736,22 +721,20 @@ public class ServerRequest {
                                 Calendar cldEnd = Calendar.getInstance();
                                 cldEnd.set(jo.getInt("year"), months[jo.getInt("month") - 1], jo.getInt("day"),
                                         Integer.parseInt(endTime.substring(0, 2)), Integer.parseInt(endTime.substring(2)));
-                                WeekViewEvent event = new WeekViewEvent(countWeekEvent++, jo.getString("courseName"), cldStart, cldEnd);
-                                weekViewEvents.add(event);
+                                Event event = new Event(jo.getString("courseName"), cldStart, cldEnd);
+                                events.add(event);
                             }
-
+                            parsed.setText("Number of courses in get:" + events.size());
                             // TODO: display events
 
-
                         } catch (final JSONException e) {
-
+                            mTextView.setText("Json parsing error: " + e.getMessage());
                         }
-                        finished = true;
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-
+                mTextView.setText("That didn't work!");
             }
         }) {
             protected Map<String, String> getParams() throws com.android.volley.AuthFailureError {
@@ -764,193 +747,6 @@ public class ServerRequest {
         };
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
-        while(!finished) ;
-        return weekViewEvents;
-    }
-/*
-    public List<Course> getAllUserCourses(String email) {
-        List<Course> courses = new ArrayList<Course>();
-        courses.add(new Course(
-                "201710",
-                "Fall 16",
-                "COMP",
-                556,
-                "001",
-                "School of Engineering",
-                "Computer Science",
-                13949,
-                "INTRO TO COMPUTER NETWORKS",
-                "Network architectures, algorithms, and protocols. Local- and Wide-area networking. Intra- and inter-domain routing. Transmission reliability. Flow and congestion control. TCP/IP. Multicast. Quality of Service. Network Security - Networked applications. Additional coursework required beyond the undergraduate course requirements.",
-                "4",
-                1,
-                "HRZ 212",
-                "Ng, Tze Sing E.",
-                70,
-                23,
-                0,
-                0,
-                "",
-                "http://courses.rice.edu/admweb/swkscat.main?p_action=COURSE&p_crn=13949&p_term=201710"
-        ));
-        courses.add(new Course("201710", "COMP", 532, "Intro. to Distributed Systems"));
-        courses.add(new Course("201710", "COMP", 556, "Intro. to Computer Network"));
-        courses.add(new Course("201710", "COMP", 532, "Intro. to Distributed Systems"));
-        courses.add(new Course("201710", "COMP", 556, "Intro. to Computer Network"));
-        courses.add(new Course("201710", "COMP", 532, "Intro. to Distributed Systems"));
-        courses.add(new Course("201710", "COMP", 556, "Intro. to Computer Network"));
-        courses.add(new Course("201710", "COMP", 532, "Intro. to Distributed Systems"));
-        courses.add(new Course("201710", "COMP", 556, "Intro. to Computer Network"));
-        courses.add(new Course("201710", "COMP", 532, "Intro. to Distributed Systems"));
-        courses.add(new Course("201710", "COMP", 556, "Intro. to Computer Network"));
-        courses.add(new Course("201710", "COMP", 532, "Intro. to Distributed Systems"));
-        courses.add(new Course("201710", "COMP", 556, "Intro. to Computer Network"));
-        courses.add(new Course("201710", "COMP", 532, "Intro. to Distributed Systems"));
-        courses.add(new Course("201710", "COMP", 556, "Intro. to Computer Network"));
-        courses.add(new Course("201710", "COMP", 532, "Intro. to Distributed Systems"));
-        courses.add(new Course("201710", "COMP", 556, "Intro. to Computer Network"));
-        courses.add(new Course("201710", "COMP", 532, "Intro. to Distributed Systems"));
-
-        return courses;
-    }*/
-/*
-    public List<WeekViewEvent> getEventsByMonth(String email, int newYear, int newMonth) {
-        List<WeekViewEvent> events = new ArrayList<WeekViewEvent>();
-
-        Log.d(ServerRequest.class.getName()+"Log", "newYear:"+newYear + " newMonth:"+newMonth);
-
-        Calendar startTime = Calendar.getInstance();
-        Calendar endTime;
-
-        startTime.set(2017,Calendar.SEPTEMBER,23,8,0);
-        endTime = (Calendar)startTime.clone();
-        endTime.set(2017,Calendar.SEPTEMBER,23,10,0);
-        WeekViewEvent event = new WeekViewEvent(1, "event1", startTime, endTime);
-        event.setColor(ContextCompat.getColor(context, R.color.event_color_01));
-        events.add(event);
-
-        startTime = Calendar.getInstance();
-        startTime.set(2017,Calendar.SEPTEMBER,23,8,10);
-        endTime = (Calendar)startTime.clone();
-        endTime.set(2017,Calendar.SEPTEMBER,23,10,20);
-        event = new WeekViewEvent(2, "event2", (Calendar)startTime, (Calendar)endTime);
-        event.setColor(ContextCompat.getColor(context, R.color.event_color_02));
-        events.add(event);
-
-        return events;
-    }
-
-    public List<Course> getAllCourses(String email, int term, String dept) {
-        return new ArrayList<Course>();
-    }
-
-    public void deleteUserCourse(String email, Course course) {
-
-    }
-
-    public List<Todo> getAllUserTodos(String email) {
-        List<Todo> todos = new ArrayList<Todo>();
-        todos.add(new Todo(
-                "Meeting Prof",
-                Category.CATEGORY_OFFICIAL,
-                "2017/9/23",
-                "13:00",
-                "15:00",
-                "Progress Report of recent survey")
-        );
-        todos.add(new Todo(
-                "Meeting friend",
-                Category.CATEGORY_CASUAL,
-                "2017/9/24",
-                "11:00",
-                "12:30",
-                "Eating lunch!!")
-        );
-        todos.add(new Todo(
-                "Deadline on Project 1 of COMP556",
-                Category.CATEGORY_DEADLINE,
-                "2017/9/24",
-                "16:00",
-                "23:59",
-                "Need to be submitted before midnight")
-        );
-
-        return todos;
-    }
-
-    public List<Todo> getUserTodosByPriority(String email, int currentPriority) {
-        List<Todo> todos = new ArrayList<Todo>();
-        todos.add(new Todo(
-                "Meeting Prof",
-                Category.CATEGORY_OFFICIAL,
-                "2017/9/23",
-                "13:00",
-                "15:00",
-                "Progress Report of recent survey")
-        );
-        todos.add(new Todo(
-                "Meeting friend",
-                Category.CATEGORY_CASUAL,
-                "2017/9/24",
-                "11:00",
-                "12:30",
-                "Eating lunch!!")
-        );
-        todos.add(new Todo(
-                "Deadline on Project 1 of COMP556",
-                Category.CATEGORY_DEADLINE,
-                "2017/9/24",
-                "16:00",
-                "23:59",
-                "Need to be submitted before midnight")
-        );
-
-        List<Todo> out = new ArrayList<Todo>();
-        for (Todo t:todos)
-            if (t.getCategory().getPriority() <= currentPriority)
-                out.add(t);
-
-        return out;
-    }
-
-    public List<Todo> getUserTodosByCategory(String email, Category category) {
-        List<Todo> todos = new ArrayList<Todo>();
-        todos.add(new Todo(
-                "Meeting Prof",
-                Category.CATEGORY_OFFICIAL,
-                "2017/9/23",
-                "13:00",
-                "15:00",
-                "Progress Report of recent survey")
-        );
-        todos.add(new Todo(
-                "Meeting friend",
-                Category.CATEGORY_CASUAL,
-                "2017/9/24",
-                "11:00",
-                "12:30",
-                "Eating lunch!!")
-        );
-        todos.add(new Todo(
-                "Deadline on Project 1 of COMP556",
-                Category.CATEGORY_DEADLINE,
-                "2017/9/24",
-                "16:00",
-                "23:59",
-                "Need to be submitted before midnight")
-        );
-
-        List<Todo> out = new ArrayList<Todo>();
-        for (Todo t:todos)
-            if (t.getCategory().equals(category))
-                out.add(t);
-
-        return out;
-    }
-
-    public void editUserTodo(String email, Todo todo) {
-    }
-
-    public void deleteUserTodo(String email, Todo todo) {
-
+        return;
     }*/
 }
